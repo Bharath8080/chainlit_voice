@@ -14,13 +14,15 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # Silence detection parameters
-SILENCE_THRESHOLD = 3500
-SILENCE_TIMEOUT = 1300.0
+SILENCE_THRESHOLD = 1500
+SILENCE_TIMEOUT = 1800.0
 
 @cl.step(type="tool")
 async def speech_to_text(audio_file):
     response = await openai_client.audio.transcriptions.create(
-        model="gpt-4o-mini-transcribe", file=audio_file
+        model="gpt-4o-mini-transcribe", 
+        file=audio_file,
+        language="en"
     )
     return response.text
 
@@ -29,7 +31,8 @@ async def text_to_speech(text: str):
     response = await openai_client.audio.speech.create(
         model="gpt-4o-mini-tts",
         voice="nova",  # OpenAI voices: alloy, echo, fable, onyx, nova, shimmer
-        input=text
+        input=text,
+        
     )
     # Fix: No need to await response.read() as it's already awaited above
     audio_content = response.content
@@ -48,7 +51,7 @@ async def generate_text_answer(transcription):
     response = await openai_client.chat.completions.create(
         model="gpt-4o",
         messages=history,
-        temperature=0.2
+        temperature=0.7
     )
     
     message = response.choices[0].message
